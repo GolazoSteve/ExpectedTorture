@@ -27,13 +27,6 @@ def get_most_recent_game_id(team_id, max_days_back=3):
                 return games[0]["gamePk"], date_str
     return None, None
 
-
-def get_game_id(team_id, date_str):
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}&teamId={team_id}"
-    r = requests.get(url).json()
-    games = r.get("dates", [{}])[0].get("games", [])
-    return games[0]["gamePk"] if games else None
-
 def get_boxscore(game_id):
     return requests.get(f"https://statsapi.mlb.com/api/v1/game/{game_id}/boxscore").json()
 
@@ -63,11 +56,10 @@ def gpt_generate(prompt, temperature=0.8):
 
 # === MAIN PIPELINE ===
 def run_gpt_fill_pipeline_minimal():
-    date_str = get_yesterday_date()
-    game_id = get_game_id(TEAM_ID, date_str)
+    game_id, date_str = get_most_recent_game_id(TEAM_ID)
     if not game_id:
         return {
-            "title": f"WADE: No Giants Game on {date_str}",
+            "title": f"WADE: No Giants Game in last {max_days_back} days",
             "sections": {
                 "Greeting": "The machine awoke. But there was no baseball.",
                 "Recap": "No data. No chaos. No hope."
