@@ -13,10 +13,20 @@ TEAM_ID = 137  # Giants
 TIMEZONE = ZoneInfo("America/Los_Angeles")
 
 # === HELPERS ===
-def get_yesterday_date():
-    now = datetime.datetime.now(TIMEZONE)
-    yesterday = now - datetime.timedelta(days=1)
-    return yesterday.strftime("%Y-%m-%d")
+def get_most_recent_game_id(team_id, max_days_back=3):
+    today = datetime.datetime.now(TIMEZONE).date()
+    for i in range(max_days_back):
+        check_date = today - datetime.timedelta(days=i)
+        date_str = check_date.strftime("%Y-%m-%d")
+        url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}&teamId={team_id}"
+        r = requests.get(url).json()
+        dates = r.get("dates", [])
+        if dates:
+            games = dates[0].get("games", [])
+            if games:
+                return games[0]["gamePk"], date_str
+    return None, None
+
 
 def get_game_id(team_id, date_str):
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}&teamId={team_id}"
